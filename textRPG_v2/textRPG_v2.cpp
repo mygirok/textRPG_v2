@@ -183,9 +183,81 @@ void RunMap()
 	}
 }
 
+int SelectJob()
+{
+	int iJob = JOB_NONE;
+	while (iJob == JOB_NONE)
+	{
+		system("cls");
+		cout << "1. Knight" << endl;
+		cout << "2. Archer" << endl;
+		cout << "3. Wizard" << endl;
+		cout << "Choose a job : ";
+		iJob = InputInt();
+
+		if (iJob <= JOB_NONE || iJob >= JOB_END)
+			iJob = JOB_NONE;
+	}
+
+	return iJob;
+}
+
+void SetPlayer(_tagPlayer* pPlayer)
+{
+	cout << "Name : ";
+	cin.getline(pPlayer->strName, NAME_SIZE - 1);
+
+	pPlayer->eJob = (JOB)SelectJob();
+	pPlayer->iExp = 0;
+	pPlayer->tInventory.iGold = 10000;
+
+	switch (pPlayer->eJob)
+	{
+	case JOB_KNIGHT:
+		strcpy_s(pPlayer->strJobName, "Knight");
+		pPlayer->iAttackMin = 5;
+		pPlayer->iAttackMax = 10;
+		pPlayer->iArmorMin = 15;
+		pPlayer->iArmorMax = 20;
+		pPlayer->iHPMax = 500;
+		pPlayer->iHP = 500;
+		pPlayer->iMP = 100;
+		pPlayer->iMPMax = 100;
+		break;
+	case JOB_ARCHER:
+		strcpy_s(pPlayer->strJobName, "Archer");
+		pPlayer->iAttackMin = 10;
+		pPlayer->iAttackMax = 15;
+		pPlayer->iArmorMin = 10;
+		pPlayer->iArmorMax = 15;
+		pPlayer->iHPMax = 400;
+		pPlayer->iHP = 400;
+		pPlayer->iMP = 200;
+		pPlayer->iMPMax = 200;
+		break;
+	case JOB_WIZARD:
+		strcpy_s(pPlayer->strJobName, "Wizard");
+		pPlayer->iAttackMin = 15;
+		pPlayer->iAttackMax = 20;
+		pPlayer->iArmorMin = 5;
+		pPlayer->iArmorMax = 10;
+		pPlayer->iHPMax = 300;
+		pPlayer->iHP = 300;
+		pPlayer->iMP = 300;
+		pPlayer->iMPMax = 300;
+		break;
+	}
+}
+
 int main()
 {
 	srand((unsigned int)time(0));
+	
+	// Make player
+	_tagPlayer	tPlayer = {};
+
+	// Setting player info
+	SetPlayer(&tPlayer);
 
 	bool bLoop = true;
 
