@@ -249,6 +249,39 @@ void SetPlayer(_tagPlayer* pPlayer)
 	}
 }
 
+_tagMonster CreateMonster(const char* pName, int iAttackMin,
+	int iAttackMax, int iArmorMin, int iArmorMax, int iHP,
+	int  iMP, int iLevel, int iExp, int iGoldMin, int iGoldMax)
+{
+	_tagMonster tMonster = {};
+
+	strcpy_s(tMonster.strName, pName);
+	tMonster.iAttackMin = iAttackMin;
+	tMonster.iAttackMax = iAttackMax;
+	tMonster.iArmorMin = iArmorMin;
+	tMonster.iArmorMax = iArmorMax;
+	tMonster.iHP = iHP;
+	tMonster.iHPMax = iHP;
+	tMonster.iMP = iMP;
+	tMonster.iMPMax = iMP;
+	tMonster.iLevel = iLevel;
+	tMonster.iExp = iExp;
+	tMonster.iGoldMin = iGoldMin;
+	tMonster.iGoldMax = iGoldMax;
+
+	return tMonster;
+}
+
+void SetMonster(_tagMonster* pMonsterArr)
+{
+	pMonsterArr[0] = CreateMonster("Gobline", 20, 30, 2, 5,
+		100, 10, 1, 1000, 500, 1500);
+	pMonsterArr[1] = CreateMonster("Troll", 80, 130, 60, 90,
+		2000, 100, 5, 7000, 6000, 8000);
+	pMonsterArr[2] = CreateMonster("Dragon", 250, 500, 200, 400,
+		30000, 20000, 10, 30000, 20000, 50000);
+}
+
 int main()
 {
 	srand((unsigned int)time(0));
@@ -258,6 +291,11 @@ int main()
 
 	// Setting player info
 	SetPlayer(&tPlayer);
+
+	// Make monster
+	_tagMonster tMonsterArr[MT_BACK - 1] = {};
+
+	SetMonster(tMonsterArr);
 
 	bool bLoop = true;
 
