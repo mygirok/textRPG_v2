@@ -53,6 +53,9 @@ enum EQUIP
 #define STORE_ARMOR_MAX		3
 #define LEVEL_MAX			10
 
+// Exp for level up 
+const int g_iLevelUpExp[LEVEL_MAX] = { 4000, 10000, 20000, 35000, 50000, 70000, 100000, 150000, 200000, 400000 };
+
 struct _tagItem
 {
 	char	strName[NAME_SIZE];
@@ -142,45 +145,6 @@ int OutputMainMenu()
 		return MM_NONE;
 
 	return iMenu;
-}
-
-int OutputMapMenu()
-{
-	system("cls");
-
-	cout << "********************** Map ***********************" << endl;
-	cout << "1. Easy" << endl;
-	cout << "2. Normal" << endl;
-	cout << "3. Hard" << endl;
-	cout << "4. Back" << endl;
-	cout << "Choose Map : ";
-	int iMenu = InputInt();
-
-	if (iMenu == INT_MAX || iMenu <= MT_NONE || iMenu > MT_BACK)
-		return MT_NONE;
-
-	return iMenu;
-}
-
-// Handles map loops
-void RunMap()
-{
-	bool bLoop = true;
-	while (bLoop)
-	{
-		switch (OutputMapMenu())
-		{
-		case MT_EASY:
-			break;
-		case MT_NORMAL:
-			break;
-		case MT_HARD:
-			break;
-		case MT_BACK:
-			bLoop = false;
-			break;
-		}
-	}
 }
 
 int SelectJob()
@@ -282,6 +246,123 @@ void SetMonster(_tagMonster* pMonsterArr)
 		30000, 20000, 10, 30000, 20000, 50000);
 }
 
+void OutputBattleTag(int iMenu)
+{
+	switch (iMenu)
+	{
+	case MT_EASY:
+		cout << "********************** Easy ***********************" << endl;
+		break;
+	case MT_NORMAL:
+		cout << "********************** Normal ***********************" << endl;
+		break;
+	case MT_HARD:
+		cout << "********************** Hard ***********************" << endl;
+		break;
+	}
+}
+
+void OutputPlayer(_tagPlayer* pPlayer)
+{
+	// Output player info.
+	cout << "======================== Player ========================" << endl;
+	cout << "Name : " << pPlayer->strName << "\tJob : " <<
+		pPlayer->strJobName << endl;
+	cout << "Level : " << pPlayer->iLevel << "\tExp : " <<
+		pPlayer->iExp << " / " << g_iLevelUpExp[pPlayer->iLevel - 1] << endl;
+
+	// Add item attack to player. 
+	if (pPlayer->bEquip[EQ_WEAPON] == true)
+	{
+		cout << "Attack : " << pPlayer->iAttackMin << " + " <<
+			pPlayer->tEquip[EQ_WEAPON].iMin << " - " <<
+			pPlayer->iAttackMax << " + " << pPlayer->tEquip[EQ_WEAPON].iMax;
+	}
+	else
+	{
+
+		cout << "Attack : " << pPlayer->iAttackMin << " - " <<
+			pPlayer->iAttackMax;
+	}
+
+	// Add item armor to player. 
+	if (pPlayer->bEquip[EQ_ARMOR] == true)
+	{
+		cout << "\tArmor : " << pPlayer->iArmorMin << " + " <<
+			pPlayer->tEquip[EQ_ARMOR].iMin << " - " <<
+			pPlayer->iArmorMax << " + " << pPlayer->tEquip[EQ_ARMOR].iMax << endl;
+	}
+	else
+	{
+
+		cout << "\tArmor : " << pPlayer->iArmorMin << " - " <<
+			pPlayer->iArmorMax << endl;
+	}
+
+	cout << "HP : " << pPlayer->iHP << " / " << pPlayer->iHPMax <<
+		"\tMP : " << pPlayer->iMP << " / " << pPlayer->iMPMax << endl;
+
+	if (pPlayer->bEquip[EQ_WEAPON])
+		cout << "Equip Weapon : " << pPlayer->tEquip[EQ_WEAPON].strName;
+
+	else
+		cout << "Equip Weapon : None";
+
+	if (pPlayer->bEquip[EQ_ARMOR])
+		cout << "\tEquip Armor : " << pPlayer->tEquip[EQ_ARMOR].strName << endl;
+
+	else
+		cout << "\tEquip Armor : None" << endl;
+
+	cout << "Gold : " << pPlayer->tInventory.iGold << " Gold" << endl << endl;
+}
+
+void RunBattle(_tagPlayer* pPlayer, _tagMonster* pMonsterArr,
+	int iMenu)
+{
+	_tagMonster tMonster = pMonsterArr[iMenu - 1];
+
+	while (true)
+	{
+		system("cls");
+		OutputBattleTag(iMenu);
+	}
+}
+
+int OutputMapMenu()
+{
+	system("cls");
+
+	cout << "********************** Map ***********************" << endl;
+	cout << "1. Easy" << endl;
+	cout << "2. Normal" << endl;
+	cout << "3. Hard" << endl;
+	cout << "4. Back" << endl;
+	cout << "Choose Map : ";
+	int iMenu = InputInt();
+
+	if (iMenu == INT_MAX || iMenu <= MT_NONE || iMenu > MT_BACK)
+		return MT_NONE;
+
+	return iMenu;
+}
+
+// Handles map loops
+void RunMap(_tagPlayer* pPlayer, _tagMonster* pMonsterArr)
+{
+	bool bLoop = true;
+	while (bLoop)
+	{
+		int iMenu = OutputMapMenu();
+
+		if (MT_BACK == iMenu)
+			return;
+
+		// Start battle
+		RunBattle(pPlayer, pMonsterArr, iMenu);
+	}
+}
+
 int main()
 {
 	srand((unsigned int)time(0));
@@ -304,7 +385,7 @@ int main()
 		switch (OutputMainMenu())
 		{
 		case MM_MAP:
-			RunMap();
+			RunMap(&tPlayer, tMonsterArr);
 			break;
 		case MM_STORE:
 			break;
