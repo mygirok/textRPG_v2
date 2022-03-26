@@ -46,6 +46,13 @@ enum EQUIP
 	EQ_MAX
 };
 
+enum BATTLE
+{
+	BATTLE_NONE,
+	BATTLE_ATTACK,
+	BATTLE_BACK
+};
+
 #define NAME_SIZE	32
 #define ITEM_DESC_LENGTH	512
 #define INVENTORY_MAX		20
@@ -317,6 +324,34 @@ void OutputPlayer(_tagPlayer* pPlayer)
 	cout << "Gold : " << pPlayer->tInventory.iGold << " Gold" << endl << endl;
 }
 
+void OutputMonster(_tagMonster* pMonster)
+{
+	// Monster info.
+	cout << "======================== Monster ========================" << endl;
+	cout << "Name : " << pMonster->strName << "\tLevel : " <<
+		pMonster->iLevel << endl;
+	cout << "Attack : " << pMonster->iAttackMin << " - " <<
+		pMonster->iAttackMax << "\tArmor : " << pMonster->iArmorMin <<
+		" - " << pMonster->iArmorMax << endl;
+	cout << "HP : " << pMonster->iHP << " / " << pMonster->iHPMax <<
+		"\tMP : " << pMonster->iMP << " / " << pMonster->iMPMax << endl;
+	cout << "Exp : " << pMonster->iExp << "\tGold : " <<
+		pMonster->iGoldMin << " - " << pMonster->iGoldMax << endl << endl;
+}
+
+int OutputBattleMenu()
+{
+	cout << "1. Attack" << endl;
+	cout << "2. Run away" << endl;
+	cout << "Choose a menu : ";
+	int iMenu = InputInt();
+	
+	if (iMenu == INT_MAX || iMenu <= BATTLE_ATTACK || iMenu > BATTLE_BACK)
+		return BATTLE_NONE;
+
+	return iMenu;
+}
+
 void RunBattle(_tagPlayer* pPlayer, _tagMonster* pMonsterArr,
 	int iMenu)
 {
@@ -326,6 +361,20 @@ void RunBattle(_tagPlayer* pPlayer, _tagMonster* pMonsterArr,
 	{
 		system("cls");
 		OutputBattleTag(iMenu);
+		
+		// Output player
+		OutputPlayer(pPlayer);
+
+		// Output monster
+		OutputMonster(&tMonster);
+
+		switch (OutputBattleMenu())
+		{
+		case BATTLE_ATTACK:
+			break;
+		case BATTLE_BACK:
+			return;
+		}
 	}
 }
 
