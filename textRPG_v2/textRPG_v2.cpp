@@ -60,9 +60,6 @@ enum BATTLE
 #define STORE_ARMOR_MAX		3
 #define LEVEL_MAX			10
 
-// Exp for level up 
-const int g_iLevelUpExp[LEVEL_MAX] = { 4000, 10000, 20000, 35000, 50000, 70000, 100000, 150000, 200000, 400000 };
-
 struct _tagItem
 {
 	char	strName[NAME_SIZE];
@@ -130,6 +127,11 @@ struct _tagLevelUpStatus
 	int iMPMin;
 	int iMPMax;
 };
+
+// Exp for level up 
+const int g_iLevelUpExp[LEVEL_MAX] = { 4000, 10000, 20000, 35000, 50000, 70000, 100000, 150000, 200000, 400000 };
+_tagLevelUpStatus g_tLvUpTable[JOB_END - 1] = {};
+
 // Check input number
 // return input if input is right
 // return INT_MAX if input is wrong number
@@ -357,7 +359,7 @@ int OutputBattleMenu()
 	cout << "Choose a menu : ";
 	int iMenu = InputInt();
 	
-	if (iMenu == INT_MAX || iMenu <= BATTLE_ATTACK || iMenu > BATTLE_BACK)
+	if (iMenu == INT_MAX || iMenu <= BATTLE_NONE || iMenu > BATTLE_BACK)
 		return BATTLE_NONE;
 
 	return iMenu;
@@ -419,19 +421,15 @@ void Battle(_tagPlayer* pPlayer, _tagMonster* pMonster)
 			// Ability up
 			// Get Job index
 			int iJobIndex = pPlayer->eJob - 1;
-			int iAttackUp = rand() % (tLvUpTable[iJobIndex].iAttackMax - tLvUpTable[iJobIndex].iAttackMin + 1) +
-				tLvUpTable[iJobIndex].iAttackMin;
-			int iArmorUp = rand() % (tLvUpTable[iJobIndex].iArmorMax - tLvUpTable[iJobIndex].iArmorMin + 1) +
-				tLvUpTable[iJobIndex].iArmorMin;
-			int iHPUp = rand() % (tLvUpTable[iJobIndex].iHPMax - tLvUpTable[iJobIndex].iHPMin + 1) +
-				tLvUpTable[iJobIndex].iHPMin;
-			int iMPUp = rand() % (tLvUpTable[iJobIndex].iMPMax - tLvUpTable[iJobIndex].iMPMin + 1) +
-				tLvUpTable[iJobIndex].iMPMin;
+			int iHPUp = rand() % (g_tLvUpTable[iJobIndex].iHPMax - g_tLvUpTable[iJobIndex].iHPMin + 1) +
+				g_tLvUpTable[iJobIndex].iHPMin;
+			int iMPUp = rand() % (g_tLvUpTable[iJobIndex].iMPMax - g_tLvUpTable[iJobIndex].iMPMin + 1) +
+				g_tLvUpTable[iJobIndex].iMPMin;
 
-			pPlayer->iAttackMin += tLvUpTable[iJobIndex].iAttackMin;
-			pPlayer->iAttackMax += tLvUpTable[iJobIndex].iAttackMax;
-			pPlayer->iArmorMin += tLvUpTable[iJobIndex].iArmorMin;
-			pPlayer->iArmorMax += tLvUpTable[iJobIndex].iArmorMax;
+			pPlayer->iAttackMin += g_tLvUpTable[iJobIndex].iAttackMin;
+			pPlayer->iAttackMax += g_tLvUpTable[iJobIndex].iAttackMax;
+			pPlayer->iArmorMin += g_tLvUpTable[iJobIndex].iArmorMin;
+			pPlayer->iArmorMax += g_tLvUpTable[iJobIndex].iArmorMax;
 
 			pPlayer->iHPMax += iHPUp;
 			pPlayer->iMPMax += iMPUp;
@@ -440,10 +438,55 @@ void Battle(_tagPlayer* pPlayer, _tagMonster* pMonster)
 			pPlayer->iHP = pPlayer->iHPMax;
 			pPlayer->iMP = pPlayer->iMPMax;
 
-		}
-
-		system("pause");
+		} 
+		return;
 	}
+
+	// Monster attack player.
+	iAttack = rand() % (pMonster->iAttackMax - pMonster->iAttackMin + 1) +
+		pMonster->iAttackMin;
+
+	int iArmorMin = pPlayer->iArmorMin;
+	int iArmorMax = pPlayer->iArmorMax;
+
+	if (pPlayer->bEquip[EQ_ARMOR])
+	{
+		iArmorMin += pPlayer->tEquip[EQ_ARMOR].iMin;
+		iArmorMax += pPlayer->tEquip[EQ_ARMOR].iMax;
+	}
+
+	iArmor = rand() % (iArmorMax - iArmorMin + 1) +
+		iArmorMin;
+
+	iDamage = iAttack - iArmor;
+	iDamage = iDamage < 1 ? 1 : iDamage;
+
+
+	// Plyaer HP after attacked.
+	pPlayer->iHP -= iDamage;
+	cout << pMonster->strName << " deals " << iDamage <<
+		" damage to " << pPlayer->strName << endl;
+
+
+	// if player dies.
+	if (pPlayer->iHP <= 0)
+	{
+		cout << pPlayer->strName << " is dead." << endl;
+
+		int iExp = pPlayer->iExp * 0.1f;
+		int iGold = pPlayer->tInventory.iGold * 0.1f;
+
+		pPlayer->iExp -= iExp;
+		pPlayer->tInventory.iGold -= iGold;
+
+		cout << "You lost " << pMonster->iExp << " EXP" << endl;
+		cout << "You lost " << iGold << " Gold" << endl;
+
+		pPlayer->iHP = pPlayer->iHPMax;
+		pPlayer->iMP = pPlayer->iMPMax;
+
+	}
+}
 
 void RunBattle(_tagPlayer* pPlayer, _tagMonster* pMonsterArr,
 	int iMenu)
@@ -452,7 +495,7 @@ void RunBattle(_tagPlayer* pPlayer, _tagMonster* pMonsterArr,
 
 	while (true)
 	{
-		system("cls");
+		system("cls"); 
 		OutputBattleTag(iMenu);
 		
 		// Output player
@@ -464,7 +507,8 @@ void RunBattle(_tagPlayer* pPlayer, _tagMonster* pMonsterArr,
 		switch (OutputBattleMenu())
 		{
 		case BATTLE_ATTACK:
-			Battle(pPlayer, &tMonster);
+			Battle(pPlayer, &tMonster); 
+			system("pause");
 			break;
 		case BATTLE_BACK:
 			return;
@@ -514,7 +558,7 @@ _tagLevelUpStatus CreateLvUpStatus(int iAttackMin, int iAttackMax,
 
 	tStatus.iAttackMin = iAttackMin;
 	tStatus.iAttackMax = iAttackMax;
-	tStatus.iArmorMin = iArmorMin;
+	tStatus.iArmorMin = iArmorMIn;
 	tStatus.iArmorMax = iArmorMax;
 	tStatus.iHPMin = iHPMin;
 	tStatus.iHPMax = iHPMax;
@@ -537,7 +581,14 @@ int main()
 	// Make monster
 	_tagMonster tMonsterArr[MT_BACK - 1] = {};
 
-	SetMonster(tMonsterArr);
+	SetMonster(tMonsterArr); 
+
+	g_tLvUpTable[JOB_KNIGHT - 1] = CreateLvUpStatus(4, 10,
+		8, 16, 50, 100, 10, 20);
+	g_tLvUpTable[JOB_ARCHER - 1] = CreateLvUpStatus(10, 15,
+		5, 10, 30, 60, 30, 50);
+	g_tLvUpTable[JOB_WIZARD - 1] = CreateLvUpStatus(15, 20,
+		3, 7, 20, 40, 50, 100);
 
 	bool bLoop = true;
 
