@@ -568,6 +568,38 @@ _tagLevelUpStatus CreateLvUpStatus(int iAttackMin, int iAttackMax,
 	return tStatus;
 }
 
+void ReunStore(_tagInventory* pInventory)
+{
+
+}
+
+_tagItem CreateItem(const char* pName, ITEM_TYPE eType, int iMin,
+	int iMax, int iPrice, int iSell, char* pDesc)
+{
+	_tagItem tItem = {};
+	
+	strcpy_s(tItem.strName, pName);
+	strcpy_s(tItem.strDesc, pDesc);
+	
+	tItem.eType = eType;
+
+	switch (eType)
+	{
+	case IT_WEAPON:
+		strcpy_s(tItem.strTypeName, "Weapon");
+		break;
+	case IT_ARMOR:
+		strcpy_s(tItem.strTypeName, "Armor");
+		break;
+	}
+	
+	tItem.iMin = iMin;
+	tItem.iMax = iMax;
+	tItem.iSell = iSell;
+
+	return tItem;
+}
+
 int main()
 {
 	srand((unsigned int)time(0));
@@ -589,6 +621,10 @@ int main()
 		5, 10, 30, 60, 30, 50);
 	g_tLvUpTable[JOB_WIZARD - 1] = CreateLvUpStatus(15, 20,
 		3, 7, 20, 40, 50, 100);
+
+	// list of items for sale
+	_tagItem	tStoreWeapon[STORE_WEAPON_MAX] = {};
+	_tagItem	tStoreArmor[STORE_ARMOR_MAX] = {}; 
 
 	bool bLoop = true;
 
