@@ -53,6 +53,14 @@ enum BATTLE
 	BATTLE_BACK
 };
 
+enum STORE_MENU
+{
+	SM_NONE,
+	SM_WEAPON,
+	SM_ARMOR,
+	SM_BACK
+};
+
 #define NAME_SIZE	32
 #define ITEM_DESC_LENGTH	512
 #define INVENTORY_MAX		20
@@ -568,13 +576,128 @@ _tagLevelUpStatus CreateLvUpStatus(int iAttackMin, int iAttackMax,
 	return tStatus;
 }
 
-void ReunStore(_tagInventory* pInventory)
+int OutputStoreMenu()
 {
+	system("cls");
+	cout << "********************** Store ***********************" << endl;
+	cout << "1. Weapon store" << endl;
+	cout << "2. Armor store" << endl;
+	cout << "3. Back" << endl;
+	cout << "Choose a store : ";
+	int iMenu = InputInt();
 
+	if (iMenu < SM_NONE || iMenu > SM_BACK)
+		return SM_NONE;
+
+	return iMenu;
+}
+
+int OutputStoreItemList(_tagInventory* pInventory, _tagItem* pStore,
+	int iItemCount, int iStoreType)
+{
+	// Weapon list
+	for (int i = 0; i < iItemCount; ++i)
+	{
+		cout << i + 1 << ". Name : " << pStore[i].strName <<
+			"\tType : " << pStore[i].strTypeName << endl;
+		cout << "Attack : " << pStore[i].iMin << " - " <<
+			pStore[i].iMax << endl;
+		cout << "Buy : " << pStore[i].iPrice <<
+			"\tSell : " << pStore[i].iSell << endl;
+		cout << "Desc : " << pStore[i].strDesc << endl << endl;
+	}
+
+	cout << iItemCount + 1 << ". Back" << endl;
+	cout << "Holding Gold : " << pInventory->iGold << " Gold" << endl;
+	cout << "Remaining space : " << INVENTORY_MAX - pInventory->iItemCount << endl;
+	cout << "Choose a item : ";
+	int iMenu = InputInt();
+
+	if (iMenu < 1 || iMenu > iItemCount + 1)
+		return INT_MAX;
+
+	return iMenu;
+}
+
+void BuyItem(_tagInventory* pInventory, _tagItem* pStore,
+	int iItemCount, int iStoreType)
+{
+	while (true)
+	{
+		system("cls");
+		switch (iStoreType)
+		{
+		case SM_WEAPON:
+			cout << "********************** Weapon Store ***********************" << endl;
+			break;
+		case SM_ARMOR:
+			cout << "********************** Armor Store ***********************" << endl;
+			break;
+		}
+		int iInput = OutputStoreItemList(pInventory, pStore, iItemCount, iStoreType);
+
+		if (iInput == INT_MAX)
+		{
+			cout << "Wrong number. check please" << endl;
+			system("pause");
+			continue;
+		}
+
+		else if (iInput == iItemCount + 1)
+			break;
+
+		// list index
+		int iIndex = iInput - 1;
+
+		// Check the inventory space
+		if (pInventory->iItemCount == INVENTORY_MAX)
+		{
+			cout << "Inventory is full" << endl;
+			system("pause");
+			continue;
+		}
+
+		// Check Gold
+		else if (pInventory->iGold < pStore[iIndex].iPrice)
+		{
+			cout << "Don't have enough Gold." << endl;
+			system("pause");
+			continue;
+		}
+
+		pInventory->tItem[pInventory->iItemCount] =
+			pStore[iIndex];
+		++pInventory->iItemCount;
+
+		pInventory->iGold -= pStore[iIndex].iPrice;
+
+		cout << "Bought	" << pStore[iIndex].strName << endl;
+		system("pause");
+	}
+}
+
+void RunStore(_tagInventory* pInventory, _tagItem* pWeapon,
+	_tagItem* pArmor)
+{
+	while (true)
+	{
+		switch (OutputStoreMenu())
+		{
+		case SM_WEAPON:
+			BuyItem(pInventory, pWeapon, STORE_WEAPON_MAX, SM_WEAPON);
+			break;
+		case SM_ARMOR:
+			BuyItem(pInventory, pArmor, STORE_ARMOR_MAX, SM_ARMOR);
+			break;
+		case SM_BACK:
+			return;
+		}
+
+	}
 }
 
 _tagItem CreateItem(const char* pName, ITEM_TYPE eType, int iMin,
-	int iMax, int iPrice, int iSell, char* pDesc)
+	int iMax, int iPrice, int iSell, const char* pDesc)
 {
 	_tagItem tItem = {};
 	
@@ -626,6 +749,19 @@ int main()
 	_tagItem	tStoreWeapon[STORE_WEAPON_MAX] = {};
 	_tagItem	tStoreArmor[STORE_ARMOR_MAX] = {}; 
 
+	tStoreWeapon[0] = CreateItem("Wooden sword", IT_WEAPON, 5, 10,
+		1000, 500, "Basic sword.");
+	tStoreWeapon[1] = CreateItem("Longbow", IT_WEAPON, 20, 40,
+		7000, 3500, "Long range attack possible.");
+	tStoreWeapon[2] = CreateItem("Magic wand", IT_WEAPON, 90, 150,
+		30000, 15000, "Wooden wand.");
+
+	tStoreArmor[0] = CreateItem("Cloth armor", IT_ARMOR, 2, 5,
+		1000, 500, "Armor made of cloth.");
+	tStoreArmor[1] = CreateItem("Leather armor", IT_ARMOR, 10, 20,
+		7000, 3500, "Armor made of animal leather.");
+	tStoreArmor[2] = CreateItem("Steel armor", IT_ARMOR, 70, 90,
+		30000, 15000, "Armor made of steel");
 	bool bLoop = true;
 
 	while (bLoop)
@@ -636,6 +772,7 @@ int main()
 			RunMap(&tPlayer, tMonsterArr);
 			break;
 		case MM_STORE:
+			RunStore(&tPlayer.tInventory, tStoreWeapon, tStoreArmor);
 			break;
 		case MM_INVENTORY:
 			break;
