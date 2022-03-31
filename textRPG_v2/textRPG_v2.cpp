@@ -723,6 +723,99 @@ _tagItem CreateItem(const char* pName, ITEM_TYPE eType, int iMin,
 	return tItem;
 }
 
+int OutputInventory(_tagPlayer* pPlayer)
+{
+	system("cls");
+	cout << "********************** Inventory ***********************" << endl;
+
+	OutputPlayer(pPlayer);
+
+	for (int i = 0; i < pPlayer->tInventory.iItemCount; ++i)
+	{
+		cout << i + 1 << ". Name : " << pPlayer->tInventory.tItem[i].strName <<
+			"\tType : " << pPlayer->tInventory.tItem[i].strTypeName << endl;
+		cout << "Attack : " << pPlayer->tInventory.tItem[i].iMin << "-" <<
+			pPlayer->tInventory.tItem[i].iMax << endl;
+		cout << "Buy : " << pPlayer->tInventory.tItem[i].iPrice <<
+			"\tSell : " << pPlayer->tInventory.tItem[i].iSell << endl;
+		cout << "Desc : " << pPlayer->tInventory.tItem[i].strDesc << endl << endl;
+
+	}
+
+	cout << pPlayer->tInventory.iItemCount + 1 << ". Back" << endl;
+	cout << "Choose item to equip : ";
+	int iMenu = InputInt();
+
+	if (iMenu < 1 || iMenu > pPlayer->tInventory.iItemCount + 1)
+		return INT_MAX;
+
+	return iMenu;
+}
+
+EQUIP ComputeEquipType(ITEM_TYPE eType)
+{
+	EQUIP eq;
+
+	switch (eType)
+	{
+	case IT_WEAPON:
+		eq = EQ_WEAPON;
+		break;
+	case IT_ARMOR:
+		eq = EQ_ARMOR;
+		break;
+	}
+
+	return eq;
+
+}
+
+void RunInventory(_tagPlayer* pPlayer)
+{
+	while (true)
+	{
+		int iInput = OutputInventory(pPlayer);
+
+		if (iInput == INT_MAX)
+			continue;
+
+		else if (iInput == pPlayer->tInventory.iItemCount + 1)
+			break;
+
+		// Item index
+		int idx = iInput - 1;
+
+		// Equip item
+		EQUIP	eq = ComputeEquipType(pPlayer->tInventory.tItem[idx].eType);
+
+		// If item is already equipped, swap with selected item.
+		if (pPlayer->bEquip[eq] == true)
+		{
+			_tagItem	tSwap = pPlayer->tEquip[eq];
+			pPlayer->tEquip[eq] = pPlayer->tInventory.tItem[idx];
+			pPlayer->tInventory.tItem[idx] = tSwap;
+		}
+
+		// if item is not equipped.
+		else
+		{
+			pPlayer->tEquip[eq] = pPlayer->tInventory.tItem[idx];
+
+			for (int i = idx; i < pPlayer->tInventory.iItemCount - 1; ++i)
+			{
+				pPlayer->tInventory.tItem[i] = pPlayer->tInventory.tItem[i + 1];
+			}
+
+			--pPlayer->tInventory.iItemCount;
+
+			pPlayer->bEquip[eq] = true;
+		}
+
+		cout << "Equipped with " << pPlayer->tEquip[eq].strName << endl;
+		system("pause");
+	}
+}
+
 int main()
 {
 	srand((unsigned int)time(0));
@@ -775,6 +868,7 @@ int main()
 			RunStore(&tPlayer.tInventory, tStoreWeapon, tStoreArmor);
 			break;
 		case MM_INVENTORY:
+			RunInventory(&tPlayer);
 			break;
 		case MM_EXIT:
 			bLoop = false;
